@@ -1,0 +1,93 @@
+<html>
+<head>
+<title>T</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+</style>
+</head>
+<body bgcolor="#191a1c">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+T</font>
+</center></td></tr></table>
+<pre><span class="s0">package org.firstinspires.ftc.teamcode;</span>
+
+<span class="s0">import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;</span>
+<span class="s0">import com.qualcomm.robotcore.eventloop.opmode.TeleOp;</span>
+<span class="s0">import com.qualcomm.robotcore.hardware.DcMotor;</span>
+<span class="s0">import com.qualcomm.robotcore.hardware.DcMotorSimple;</span>
+
+<span class="s0">@TeleOp(name = &quot;Mecanum Drive HD Hex V2&quot;, group = &quot;Linear OpMode&quot;)</span>
+<span class="s0">public class MecanumDriveV2 extends LinearOpMode {</span>
+
+    <span class="s0">// Definir los 4 motores HD Hex</span>
+    <span class="s0">private DcMotor frontLeft = null;</span>
+    <span class="s0">private DcMotor frontRight = null;</span>
+    <span class="s0">private DcMotor backLeft = null;</span>
+    <span class="s0">private DcMotor backRight = null;</span>
+
+    <span class="s0">@Override</span>
+    <span class="s0">public void runOpMode() {</span>
+        <span class="s0">// 1. Mapeo de hardware con los nombres configurados en el Robot Controller</span>
+        <span class="s0">frontLeft  = hardwareMap.get(DcMotor.class, &quot;frontLeft&quot;);</span>
+        <span class="s0">frontRight = hardwareMap.get(DcMotor.class, &quot;frontRight&quot;);</span>
+        <span class="s0">backLeft   = hardwareMap.get(DcMotor.class, &quot;backLeft&quot;);</span>
+        <span class="s0">backRight  = hardwareMap.get(DcMotor.class, &quot;backRight&quot;);</span>
+
+        <span class="s0">// 2. Invertir la dirección de un lado (generalmente el izquierdo)</span>
+        <span class="s0">// Debido a la orientación física de los motores en la transmisión V2</span>
+        <span class="s0">frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);</span>
+        <span class="s0">backLeft.setDirection(DcMotorSimple.Direction.REVERSE);</span>
+        <span class="s0">frontRight.setDirection(DcMotorSimple.Direction.FORWARD);</span>
+        <span class="s0">backRight.setDirection(DcMotorSimple.Direction.FORWARD);</span>
+
+        <span class="s0">telemetry.addData(&quot;Estado&quot;, &quot;Inicializado - Listo para ejecutar&quot;);</span>
+        <span class="s0">telemetry.update();</span>
+
+        <span class="s0">waitForStart();</span>
+
+        <span class="s0">while (opModeIsActive()) {</span>
+            <span class="s0">// 3. Capturar las entradas del control (Gamepad)</span>
+            <span class="s0">// Se invierte Y porque en las palancas hacia arriba es un valor negativo</span>
+            <span class="s0">double y  = -gamepad1.left_stick_y;  // Avanzar / Retroceder</span>
+            <span class="s0">double x  =  gamepad1.left_stick_x * 1.1; // Desplazamiento lateral (strafe)</span>
+            <span class="s0">double rx =  gamepad1.right_stick_x; // Giro</span>
+
+            <span class="s0">// 4. Ecuaciones cinemáticas para chasis Mecanum</span>
+            <span class="s0">double frontLeftPower  = y + x + rx;</span>
+            <span class="s0">double backLeftPower   = y - x + rx;</span>
+            <span class="s0">double frontRightPower = y - x - rx;</span>
+            <span class="s0">double backRightPower  = y + x - rx;</span>
+
+            <span class="s0">// 5. Normalizar las potencias si exceden el rango [-1.0, 1.0]</span>
+            <span class="s0">double maxPower = Math.max(</span>
+                <span class="s0">Math.abs(frontLeftPower),</span>
+                <span class="s0">Math.max(Math.abs(backLeftPower),</span>
+                <span class="s0">Math.max(Math.abs(frontRightPower), Math.abs(backRightPower)))</span>
+            <span class="s0">);</span>
+
+            <span class="s0">if (maxPower &gt; 1.0) {</span>
+                <span class="s0">frontLeftPower  /= maxPower;</span>
+                <span class="s0">backLeftPower   /= maxPower;</span>
+                <span class="s0">frontRightPower /= maxPower;</span>
+                <span class="s0">backRightPower  /= maxPower;</span>
+            <span class="s0">}</span>
+
+            <span class="s0">// 6. Aplicar las potencias calculadas a los motores HD Hex</span>
+            <span class="s0">frontLeft.setPower(frontLeftPower);</span>
+            <span class="s0">backLeft.setPower(backLeftPower);</span>
+            <span class="s0">frontRight.setPower(frontRightPower);</span>
+            <span class="s0">backRight.setPower(backRightPower);</span>
+
+            <span class="s0">// Telemetría para monitoreo en pantalla</span>
+            <span class="s0">telemetry.addData(&quot;Potencia [FL, FR]&quot;, &quot;%.2f, %.2f&quot;, frontLeftPower, frontRightPower);</span>
+            <span class="s0">telemetry.addData(&quot;Potencia [BL, BR]&quot;, &quot;%.2f, %.2f&quot;, backLeftPower, backRightPower);</span>
+            <span class="s0">telemetry.update();</span>
+        <span class="s0">}</span>
+    <span class="s0">}</span>
+<span class="s0">}</span>
+</pre>
+</body>
+</html>
